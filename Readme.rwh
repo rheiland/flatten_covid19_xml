@@ -1,0 +1,51 @@
+Make sure we get the correct .xml:
+~/git/org_COVID19/PhysiCell/config$ gbr
+  dev-MG
+  dev_MG
+* master
+
+~/dev/org_COVID19_prep_app$ cp ~/git/org_COVID19/PhysiCell/config/PhysiCell_settings.xml PhysiCell_settings_v5_hier-10-29-21.xml
+
+~/dev/org_COVID19_prep_app$ cp PhysiCell_settings_v5_hier-10-29-21.xml PhysiCell_settings_v5_hier-10-29-21-edits.xml
+
+then:
+# Manually insert missing params into "default" cell_definition in <secretion>, e.g. multiple:
+ <uptake_rate>0</>
+ <secretion_rate>0</>
+
+
+~/dev/org_COVID19_prep_app$ cp ~/git/pc4covid19-rheiland-master/data/flatten_covid19_cell_def_xml-v4.py .
+
+------------------
+~/git/pc4covid19-rheiland-master/data:
+-rw-r--r--  1 heiland  staff   57219 Aug 16 07:05 PhysiCell_settings-v5-inherit-8-3-21.xml
+-rw-r--r--  1 heiland  staff   56716 Aug 30 09:40 PhysiCell_settings-v5-inherit-8-30-21.xml
+-rw-r--r--  1 heiland  staff   56596 Jul 22 05:58 PhysiCell_settings-v5-inherit.xml
+-rw-r--r--@ 1 heiland  staff  176159 Aug 30 10:15 PhysiCell_settings.xml
+-rw-r--r--@ 1 heiland  staff  141777 Nov  5  2020 PhysiCell_settings_flat-pre-11-5-20.xml
+-rw-r--r--@ 1 heiland  staff  176133 Aug 30 09:45 PhysiCell_settings_flat-pre-8-30-21.xml
+-rw-r--r--  1 heiland  staff   57754 Jul 22 11:04 PhysiCell_settings_v5_insert_uptake_rates.xml
+-rw-r--r--@ 1 heiland  staff  176094 Aug 16 10:38 PhysiCell_settings_v5_prettyprint-pre-residual-new-volume.xml
+-rw-r--r--@ 1 heiland  staff  176088 Aug 16 12:01 PhysiCell_settings_v5_prettyprint.xml
+------------------
+
+Are there diffs in the C++? e.g.,
+
+~/git/org_COVID19/PhysiCell$ diff main.cpp ~/git/pc4covid19-rheiland-master/src/main.cpp
+167,169d166
+< 	sprintf( filename , "%s/legend.svg" , PhysiCell_settings.folder.c_str() ); 
+< 	create_plot_legend( filename , cell_coloring_function ); 
+< 	
+
+~/git/org_COVID19/PhysiCell$ diff -r custom_modules/ ~/git/pc4covid19-rheiland-master/src/custom_modules
+diff -r custom_modules/external_immune.cpp /Users/heiland/git/pc4covid19-rheiland-master/src/custom_modules/external_immune.cpp
+164,167d163
+< 	if( number_of_Ig > 1000)
+< 	{
+< 		number_of_Ig=1000;
+< 	}
+~/git/org_COVID19/PhysiCell$
+-->
+~/git/pc4covid19-rheiland-master/src$ cp ~/git/org_COVID19/PhysiCell/main.cpp .
+~/git/pc4covid19-rheiland-master/src$ cd custom_modules/
+~/git/pc4covid19-rheiland-master/src/custom_modules$ cp ~/git/org_COVID19/PhysiCell/custom_modules/external_immune.cpp .
