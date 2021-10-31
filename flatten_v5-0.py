@@ -30,10 +30,6 @@ import xml.etree.ElementTree as ET
 import sys
 
 #--------------------------------------------------
-leaf_cell_defs = {"lung epithelium":"1", "CD8 Tcell":"3", "macrophage":"4", "neutrophil":"5", "DC":"6", "CD4 Tcell":"7", "fibroblasts":"8", "residual":"9"}
-print("\nleaf_cell_defs dict: ",leaf_cell_defs,"\n")
-print("\nleaf_cell_defs dict keys: ",leaf_cell_defs.keys(),"\n")
-
 print("\n===================================================================================")
 print("\n--- Phase -2: Verify all substrates appear in the <secretion> for default cell_definition\n")
 
@@ -57,6 +53,7 @@ print("\n--- Phase -1: Verify all substrates appear in the <secretion> for 'defa
 
 tree = ET.parse("PhysiCell_settings.xml")  
 xml_root = tree.getroot()
+#leaf_cell_defs = {"lung epithelium":"1", "CD8 Tcell":"3", "macrophage":"4", "neutrophil":"5", "DC":"6", "CD4 Tcell":"7", "fibroblasts":"8"}
 leaf_cell_defs = {}
 cell_defs = tree.find('cell_definitions')
 for cell_def in list(cell_defs):
@@ -104,9 +101,7 @@ print('leaf_cell_defs= ',leaf_cell_defs)
 leaf_immune_cell_defs = list(leaf_cell_defs.keys())
 leaf_immune_cell_defs.remove('lung epithelium')
 leaf_immune_cell_defs.remove('residual')
-leaf_nonimmune_cell_defs = ['lung epithelium', 'residual']
 print('leaf_immune_cell_defs= ',leaf_immune_cell_defs)  
-print('leaf_nonimmune_cell_defs= ',leaf_nonimmune_cell_defs)  
 
 xml_root = tree.getroot()
 # sys.exit()
@@ -181,7 +176,7 @@ print("\nDone. Please check the output file: " + new_xml_file + "\n")
 #  Now read the params from the original "immune" cell_definition and update them in each leaf immune cell def
 #  in the flattened .xml just created.
 print("\n===================================================================================")
-print("--- Phase 2: edit the new .xml so each immune (leaf) cell type has its parent's (immune) params\n")
+print("--- Phase 2: edit the new .xml so each immune cell type has its parent's params (<cell_definition name='immune' parent_type='default' ...>)\n")
 
 """
 for example:
@@ -220,31 +215,26 @@ def update_all_immune_cell_def_params(xmlpath, save_param_val, substrate_name_in
                         substrate_name = elm_sub.attrib["name"]
                         print('  *-- elm_sub ',elm_sub, ", name=",substrate_name)
                         if (substrate_name_in != substrate_name):
-                            # print("   THIS IS NOT THE DROID YOU'RE LOOKING FOR")
+                            print("   THIS IS NOT THE DROID YOU'RE LOOKING FOR")
                             continue
                         print('   -- update ',uep_secretion, ', xmlpath=',xmlpath, ", save_param_val=",save_param_val)
                         # if "secretion//substrate" in xmlpath:
-
                         if "substrate//uptake_rate" in xmlpath:
-                            print("\n   =======  need special handling of secretion//substrate//uptake_rate  for ", substrate_name_in)
-                            # if "uptake_rate" in xmlpath[-13:]:
-                            if True:
+                            print("   =======  need special handling of secretion//substrate//uptake_rate  for ", substrate_name_in)
+                            if "uptake_rate" in xmlpath[-13:]:
                                 print("\n   =======     handle uptake_rate")
                                 print("   =======     xmlpath[:-13]",xmlpath[:-13] )
                                 print("   =======     substrate_name as param= ",substrate_name_in )
                                 if (substrate_name == substrate_name_in):
-                                    print("   WEEEEEEEEEEEEE!!! match found for: ",substrate_name)
+                                    print("   WEEEEEEEEEEEEE!!! match found")
                                     print('   xmlpath=',xmlpath)
                                     # elm.find('.'+xmlpath).text = save_param_val   # FINALLY, update the value
                                     # elm_sub.find('.'+xmlpath).text = save_param_val   # FINALLY, update the value
-                                    print("   setting value = ", save_param_val)
                                     elm_sub.find('.'+'//uptake_rate').text = save_param_val   # FINALLY, update the value
                                     break
-
                         elif "substrate//secretion_rate" in xmlpath:
-                            print("\n   ===========  need special handling of secretion//substrate//secretion_rate  for ", substrate_name_in)
-                            # if "uptake_rate" in xmlpath[-13:]:
-                            if True:
+                            print("   =======  need special handling of secretion//substrate//secretion_rate  for ", substrate_name_in)
+                            if "uptake_rate" in xmlpath[-13:]:
                                 print("\n   =======     handle secretion_rate")
                                 print("   =======     xmlpath[:-13]",xmlpath[:-13] )
                                 print("   =======     substrate_name as param= ",substrate_name_in )
@@ -253,24 +243,7 @@ def update_all_immune_cell_def_params(xmlpath, save_param_val, substrate_name_in
                                     print('   xmlpath=',xmlpath)
                                     # elm.find('.'+xmlpath).text = save_param_val   # FINALLY, update the value
                                     # elm_sub.find('.'+xmlpath).text = save_param_val   # FINALLY, update the value
-                                    print("   setting value = ", save_param_val)
                                     elm_sub.find('.'+'//secretion_rate').text = save_param_val   # FINALLY, update the value
-                                    break
-
-                        elif "substrate//secretion_target" in xmlpath:
-                            print("\n   ===========  need special handling of secretion//substrate//secretion_target", substrate_name_in)
-                            # if "uptake_target" in xmlpath[-13:]:
-                            if True:
-                                print("\n   =======     handle secretion_target")
-                                print("   =======     xmlpath[:-13]",xmlpath[:-13] )
-                                print("   =======     substrate_name as param= ",substrate_name_in )
-                                if (substrate_name == substrate_name_in):
-                                    print("   WEEEEEEEEEEEEE!!! match found")
-                                    print('   xmlpath=',xmlpath)
-                                    # elm.find('.'+xmlpath).text = save_param_val   # FINALLY, update the value
-                                    # elm_sub.find('.'+xmlpath).text = save_param_val   # FINALLY, update the value
-                                    print("   setting value = ", save_param_val)
-                                    elm_sub.find('.'+'//secretion_target').text = save_param_val   # FINALLY, update the value
                                     break
 
                     #---------
@@ -326,7 +299,7 @@ def recurse_node(root,xmlpath,substrate_name):
 
 
 idx = -1
-tree_orig = ET.parse("PhysiCell_settings.xml")
+tree_orig = ET.parse("PhysiCell_settings.xml")  
 # tree = ET.parse("new_flat_config1.xml")  
 xml_orig = tree_orig.getroot()
 uep = None
@@ -347,10 +320,10 @@ new_xml_file = "new_flat_config2.xml"
 tree_flat.write(new_xml_file)
 print("\nDone. Please check the output file: " + new_xml_file + "\n")
 
-sys.exit()
+# sys.exit()
 #--------------------------------------------------
 print("\n===================================================================================")
-print("--- Phase 3: edit the new .xml so each non-immune (leaf) cell type has its parent's (default) params\n")
+print("--- Phase 3: edit the new .xml so each immune cell type has its specific params (from the ORIGINAL .xml).")
 
 tree_flat = ET.parse("new_flat_config2.xml")  
 # tree_flat = ET.parse(new_xml_file)  
@@ -397,9 +370,10 @@ def recurse_node2(root,xmlpath, cell_def_name):
         save_param_val = None
 
 
+#leaf_immune_cell_defs = ["CD8 Tcell", "macrophage", "neutrophil", "DC", "CD4 Tcell"]
 for cd in xml_orig.findall('cell_definitions//cell_definition'):
     idx += 1
-    if cd.attrib["name"] in leaf_nonimmune_cell_defs:
+    if cd.attrib["name"] in leaf_immune_cell_defs:
         uep = cd
         print("\n---------------- processing ",cd.attrib["name"])   # 2  (0=default, 1=lung epi)
         # immune_uep = root.find('.//cell_definitions')
