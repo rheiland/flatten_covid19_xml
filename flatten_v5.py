@@ -220,6 +220,9 @@ def recurse_node(root, xmlpath, substrate_name, cell_name):
         substrate_name = root.attrib["name"]
         # print("recurse_node: ========>> substrate_name =",substrate_name ,"\n")
         xmlpath = xmlpath.replace("substrate", "substrate[@name='" + substrate_name + "']" )
+
+    # else if (root.tag == "model")   # TODO, eventually? apoptosis vs. necrosis death models
+
     for child in root:
         param_val = ' '.join(child.text.split())
         if param_val != '':
@@ -240,6 +243,8 @@ def recurse_node(root, xmlpath, substrate_name, cell_name):
         uep = xml_flat_root.find(fullpath)
         try:
             uep.text  = save_param_val
+            if "death_rate" in fullpath:
+                print(fullpath, save_param_val)
         except:
             print("Error trying to assign: uep.text =",save_param_val)
             print("You need to repair (probably insert) the missing XML element based on:")
@@ -257,7 +262,7 @@ def recurse_node(root, xmlpath, substrate_name, cell_name):
 #
 
 # hardcode for now:
-leaf_immune_cell_defs = ["CD8 Tcell", "macrophage", "neutrophil", "DC", "CD4 Tcell","fibroblast"]
+leaf_immune_cell_defs = ["CD8 Tcell", "macrophage", "neutrophil", "DC", "CD4 Tcell", "fibroblast"]
 # leaf_immune_cell_defs = ["macrophage"]
 
 idx = -1
@@ -280,7 +285,7 @@ print("\nDone. Please check the output file: " + new_xml_file + "\n")
 
 #--------------------------------------------------
 print("\n===================================================================================")
-print("--- Phase 4: edit the new .xml so each non-immune (leaf) cell type has its parent's (default) params\n")
+print("--- Phase 4: copy over all leaf cell def params from hier to flat.\n")
 
 #
 # Recursively walk through each leaf cell_def (in the original hierarchical .xml) and for
@@ -298,17 +303,15 @@ xml_orig = tree_orig.getroot()
 
 # leaf_cell_defs = {"lung epithelium":"1", "CD8 Tcell":"3", "macrophage":"4", "neutrophil":"5", "DC":"6", "CD4 Tcell":"7", "fibroblasts":"8", "residual":"9"}
 # hardcode for now:
-# leaf_cell_defs = ["lung epithelium", "residual", "macrophage" ]
-leaf_cell_defs = ["CD8 Tcell", "macrophage", "neutrophil", "DC", "CD4 Tcell","fibroblasts", "lung epithelium", "residual"]
+leaf_cell_defs = ["CD8 Tcell", "macrophage", "neutrophil", "DC", "CD4 Tcell", "fibroblast", "lung epithelium", "residual"]
+# leaf_cell_defs = ["lung epithelium", "residual"]
 for cd in xml_orig.findall('cell_definitions//cell_definition'):
     idx += 1
     if cd.attrib["name"] in leaf_cell_defs:
-        uep = cd
+        # uep = cd
         print("\n>>>>>>>>>>> processing ",cd.attrib["name"])   # 2  (0=default, 1=lung epi)
         # immune_uep = root.find('.//cell_definitions')
-        for child in cd:
-            # print("------- calling recurse_node on child=",child)
-            # recurse_node(child,"",cd.attrib["name"])
+        for child in cd:   # including <custom_data> !
             recurse_node(child, "", "", cd.attrib["name"])
 
 print("\nDone.")
@@ -316,6 +319,7 @@ print("\nDone.")
 new_xml_file = "flat_final.xml"
 tree_flat.write(new_xml_file)
 
+# Need to prepend the 1st line
 with open(new_xml_file, 'r+') as f:
     new_xml = f.read()
     f.seek(0, 0)
